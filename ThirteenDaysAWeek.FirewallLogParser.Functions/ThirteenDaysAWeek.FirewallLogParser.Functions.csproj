@@ -17,4 +17,8 @@
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Models\" />
+  </ItemGroup>
+  <ProjectExtensions><VisualStudio><UserProperties host_1json__JSONSchema="" /></VisualStudio></ProjectExtensions>
 </Project>
