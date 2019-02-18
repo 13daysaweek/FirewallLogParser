@@ -13,7 +13,7 @@ namespace ThirteenDaysAWeek.FirewallLogParser.Functions.Orchestration
             ILogger log)
         {
             var user = Environment.GetEnvironmentVariable("router-username");
-            await context.CallActivityAsync(nameof(LogRetriever.GetLogs), null);
+            var logContents = await context.CallActivityAsync<string>(nameof(LogRetriever.GetLogs), null);
         }
     }
 }
