@@ -1,49 +1,34 @@
-using System.Collections.Generic;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Host;
-using Microsoft.Extensions.Logging;
 
 namespace ThirteenDaysAWeek.FirewallLogParser.Functions
 {
     public static class Orchestrator
     {
-        [FunctionName("Orchestrator")]
-        public static async Task<List<string>> RunOrchestrator(
-            [OrchestrationTrigger] DurableOrchestrationContext context)
+        [FunctionName(nameof(ScheduledStart))]
+        public static async Task ScheduledStart([TimerTrigger("0 * * * * *")] TimerInfo timerInfo,
+            [OrchestrationClient] DurableOrchestrationClient starter, TraceWriter log)
         {
-            var outputs = new List<string>();
-
-            // Replace "hello" with the name of your Durable Activity Function.
-            outputs.Add(await context.CallActivityAsync<string>("Orchestrator_Hello", "Tokyo"));
-            outputs.Add(await context.CallActivityAsync<string>("Orchestrator_Hello", "Seattle"));
-            outputs.Add(await context.CallActivityAsync<string>("Orchestrator_Hello", "London"));
-
-            // returns ["Hello Tokyo!", "Hello Seattle!", "Hello London!"]
-            return outputs;
+            var instanceId = await starter.StartNewAsync(nameof(StartOrchestrator), null);
+            log.Info("Timer elapsed, starting orchestration");
+            log.Info($"Instance Id {instanceId} started!");
         }
 
-        [FunctionName("Orchestrator_Hello")]
-        public static string SayHello([ActivityTrigger] string name, ILogger log)
+        [FunctionName(nameof(StartOrchestrator))]
+        public static async Task StartOrchestrator([OrchestrationTrigger] DurableOrchestrationContext context,
+            TraceWriter log)
         {
-            log.LogInformation($"Saying hello to {name}.");
-            return $"Hello {name}!";
+            await context.CallActivityAsync(nameof(AnotherClass.DoGoodStuff), null);
         }
+    }
 
-        [FunctionName("Orchestrator_HttpStart")]
-        public static async Task<HttpResponseMessage> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")]HttpRequestMessage req,
-            [OrchestrationClient]DurableOrchestrationClient starter,
-            ILogger log)
+    public static class AnotherClass
+    {
+        [FunctionName(nameof(DoGoodStuff))]
+        public static async Task DoGoodStuff([ActivityTrigger] DurableActivityContext context, TraceWriter log)
         {
-            // Function input comes from the request content.
-            string instanceId = await starter.StartNewAsync("Orchestrator", null);
-
-            log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
-
-            return starter.CreateCheckStatusResponse(req, instanceId);
+            log.Info("Child function called successfully");
         }
     }
 }
