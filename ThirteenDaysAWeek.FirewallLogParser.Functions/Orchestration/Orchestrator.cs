@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
+using Microsoft.Extensions.Logging;
 using ThirteenDaysAWeek.FirewallLogParser.Functions.Activities;
 
 namespace ThirteenDaysAWeek.FirewallLogParser.Functions.Orchestration
@@ -10,10 +10,10 @@ namespace ThirteenDaysAWeek.FirewallLogParser.Functions.Orchestration
     {
         [FunctionName(nameof(StartOrchestrator))]
         public static async Task StartOrchestrator([OrchestrationTrigger] DurableOrchestrationContext context,
-            TraceWriter log)
+            ILogger log)
         {
             var user = Environment.GetEnvironmentVariable("router-username");
-            await context.CallActivityAsync(nameof(AnotherClass.DoGoodStuff), null);
+            var logContents = await context.CallActivityAsync<string>(nameof(LogRetriever.GetLogs), null);
         }
     }
 }
